@@ -3,13 +3,42 @@
 
 #include <opencv2/opencv.hpp>
 #include <opencv2/highgui.hpp>
+#include <SDL.h>
 
+#include "imgui/imgui.h"
+#include "imgui/imgui_impl_sdl_gl3.h"
 #include "utils.h"
 #include "filters.h"
+#include "ui.h"
+
+#undef main
 
 int main(int argc, char *argv[])
 {
-	cv::VideoCapture video("http://127.0.0.1:8000/campus4-c0.avi");
+	SDL_Window *window = ui_init();
+	bool done = false;
+	while (!done)
+	{
+		// Handle Events
+		SDL_Event event;
+		while (SDL_PollEvent(&event))
+		{
+			ImGui_ImplSdlGL3_ProcessEvent(&event);
+			if (event.type == SDL_QUIT)
+				done = true;
+		}
+
+		ImGui_ImplSdlGL3_NewFrame(window);
+
+		ImGui::SetNextWindowSize(ImVec2(640, 720));
+		ImGui::Begin("Video Feed");
+		ImGui::Text("Hello");
+		ImGui::End();
+		render_window(window);
+	}
+	ui_cleanup(window);
+
+	/*cv::VideoCapture video("http://127.0.0.1:8000/campus4-c0.avi");
 	cv::Mat frame;
 	bool success;
 
@@ -52,6 +81,7 @@ int main(int argc, char *argv[])
 		if (key == 'q')
 			break;
 	}
-	cv::destroyAllWindows();
+	cv::destroyAllWindows();*/
+	
 	return 0;
 }
