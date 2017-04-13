@@ -45,3 +45,14 @@ cv::Mat cvt_color(const cv::Mat& image, cv::ColorConversionCodes type)
 
 	return result;
 }
+
+std::vector<std::vector<cv::Point>> find_contours(const cv::Mat& image,
+	cv::RetrievalModes retrieval_mode, cv::ContourApproximationModes approx_mode)
+{
+	cv::Mat img_copy;
+	std::vector<std::vector<cv::Point>> contours;
+	image.copyTo(img_copy);
+	cv::findContours(img_copy, contours, retrieval_mode, approx_mode);
+	
+	return contours;
+}

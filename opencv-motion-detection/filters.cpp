@@ -30,6 +30,15 @@ cv::Mat frame_diff(const cv::Mat& prev, const cv::Mat& cur, const cv::Mat& next)
 	return result;
 }
 
+cv::Mat dilate(const cv::Mat& img, int iterations)
+{
+	cv::Mat result;
+
+	cv::dilate(img, result, cv::Mat(), cv::Point(-1, -1), iterations);
+
+	return result;
+}
+
 cv::Mat mog2(const cv::Mat& frame, cv::Ptr<cv::BackgroundSubtractor> mog2)
 {
 	cv::Mat fg_mask;
