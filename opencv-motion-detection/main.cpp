@@ -19,6 +19,8 @@ int main(int argc, char *argv[])
 
 	cv::Mat frame = cv::imread("snoop_dogg.jpg");
 	GLuint snoop_tex = mat_to_tex(frame);
+	cv::Mat frame_gray = cvt_color(frame, cv::COLOR_BGR2GRAY);
+	GLuint snoop_tex_gray = mat_to_tex(frame_gray);
 
 	bool done = false;
 	while (!done)
@@ -39,20 +41,32 @@ int main(int argc, char *argv[])
 			| ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoTitleBar
 			| ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoMove);
 		ImGui::SetWindowFontScale(1.5f);
-		static char buf1[128] = "";
+		static char video_path[128] = "";
 		ImGui::Text("Input Video Path: ");
 		ImGui::SameLine();
-		ImGui::InputText("", buf1, 128);
-		//ImGui::SetNextWindowSize(ImVec2(640, 720));
+		ImGui::PushItemWidth(800);
+		ImGui::InputText("##", video_path, 128);
+		ImGui::PopItemWidth();
+		ImGui::SameLine();
+		if (ImGui::Button("OK", ImVec2(45, 25)))
+		{
+			std::cout << video_path << std::endl;
+		}
+
 		float video_feed_width = ImGui::GetWindowContentRegionWidth() * 0.5f;
 		float video_feed_height = ImGui::GetWindowHeight() - 50;
 		ImGui::BeginChild("Video Feed", ImVec2(video_feed_width, video_feed_height), false);
 		ImGui::Image((void*)snoop_tex, ImVec2(frame.size().width, frame.size().height));
 		ImGui::EndChild();
+		ImGui::SameLine();
+		ImGui::BeginChild("Motion Detection", ImVec2(video_feed_width, video_feed_height), false);
+		ImGui::Image((void*)snoop_tex_gray, ImVec2(frame_gray.size().width, frame_gray.size().height));
+		ImGui::EndChild();
 		ImGui::End();
 		render_window(window);
 	}
 	glDeleteTextures(1, &snoop_tex);
+	glDeleteTextures(1, &snoop_tex_gray);
 	ui_cleanup(window);
 
 	/*cv::VideoCapture video("http://127.0.0.1:8000/campus4-c0.avi");
