@@ -16,11 +16,12 @@
 int main(int argc, char *argv[])
 {
 	SDL_Window *window = ui_init();
+	cv::VideoCapture video;
+	bool success, first_run = true;
+	cv::Mat src_frame, motion_frame;
+	GLuint src_frame_tex, motion_frame_tex;
 
-	cv::Mat frame = cv::imread("snoop_dogg.jpg");
-	GLuint snoop_tex = mat_to_tex(frame);
-	cv::Mat frame_gray = cvt_color(frame, cv::COLOR_BGR2GRAY);
-	GLuint snoop_tex_gray = mat_to_tex(frame_gray);
+	auto bg_model = cv::createBackgroundSubtractorMOG2();
 
 	bool done = false;
 	while (!done)
@@ -35,7 +36,6 @@ int main(int argc, char *argv[])
 		}
 
 		ImGui_ImplSdlGL3_NewFrame(window);
-		ImGui::ShowTestWindow((bool*)true);
 		ImGui::SetNextWindowSize(ImVec2(1280, 720));
 		ImGui::Begin("Main Window", (bool*)true, ImGuiWindowFlags_AlwaysAutoResize
 			| ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoTitleBar
@@ -50,69 +50,65 @@ int main(int argc, char *argv[])
 		ImGui::SameLine();
 		if (ImGui::Button("OK", ImVec2(45, 25)))
 		{
-			std::cout << video_path << std::endl;
+			bool opened = video.open(video_path);
+			if (!opened)
+				std::cout << "Can't open video from provided path!! Try again with correct path."
+					      << std::endl;
 		}
+		if (video.isOpened())
+		{
+			success = video.read(src_frame);
+			if (!success)
+			{
+				std::cout << "Can't read video frame!!";
+				break;
+			}
+			if (!first_run)
+			{
+				glDeleteTextures(1, &src_frame_tex);
+				glDeleteTextures(1, &motion_frame_tex);
+			}
+			cv::Mat src_frame_gray = cvt_color(src_frame, cv::COLOR_BGR2GRAY);
+			cv::Mat mask = mog2(src_frame_gray, bg_model);
+			mask = dilate(mask, 3);
+			auto contours = find_contours(mask);
 
-		float video_feed_width = ImGui::GetWindowContentRegionWidth() * 0.5f;
-		float video_feed_height = ImGui::GetWindowHeight() - 50;
-		ImGui::BeginChild("Video Feed", ImVec2(video_feed_width, video_feed_height), false);
-		ImGui::Image((void*)snoop_tex, ImVec2(frame.size().width, frame.size().height));
-		ImGui::EndChild();
-		ImGui::SameLine();
-		ImGui::BeginChild("Motion Detection", ImVec2(video_feed_width, video_feed_height), false);
-		ImGui::Image((void*)snoop_tex_gray, ImVec2(frame_gray.size().width, frame_gray.size().height));
-		ImGui::EndChild();
+			src_frame.copyTo(motion_frame);
+			cv::Rect box;
+			for (auto& c : contours)
+			{
+				if (cv::contourArea(c) < 1000 || cv::contourArea(c) > 5000)
+					continue;
+				box = cv::boundingRect(c);
+				cv::rectangle(motion_frame, box, cv::Scalar(0, 0, 255));
+			}
+
+			float video_feed_width = ImGui::GetWindowContentRegionWidth() * 0.5f;
+			float video_feed_height = ImGui::GetWindowHeight() - 50;
+			src_frame = resize(src_frame, video_feed_width, 0, cv::INTER_LINEAR);
+			src_frame_tex = mat_to_tex(src_frame);
+			motion_frame = resize(motion_frame, video_feed_width, 0, cv::INTER_CUBIC);
+			motion_frame_tex = mat_to_tex(motion_frame);
+			first_run = false;
+			
+			ImGui::BeginChild("Video Feed", ImVec2(video_feed_width, video_feed_height), false);
+			ImGui::Image((void*)src_frame_tex, ImVec2(src_frame.size().width,
+				src_frame.size().height));
+			ImGui::SetWindowFontScale(1.5f);
+			ImGui::Text("SOURCE VIDEO");
+			ImGui::EndChild();
+			ImGui::SameLine();
+			ImGui::BeginChild("Motion Detection", ImVec2(video_feed_width, video_feed_height),
+				false);
+			ImGui::Image((void*)motion_frame_tex, ImVec2(motion_frame.size().width,
+				motion_frame.size().height));
+			ImGui::SetWindowFontScale(1.5f);
+			ImGui::Text("RESULT OF MOTION DETECTION");
+			ImGui::EndChild();
+		}
 		ImGui::End();
 		render_window(window);
 	}
-	glDeleteTextures(1, &snoop_tex);
-	glDeleteTextures(1, &snoop_tex_gray);
 	ui_cleanup(window);
-
-	/*cv::VideoCapture video("http://127.0.0.1:8000/campus4-c0.avi");
-	cv::Mat frame;
-	bool success;
-
-	auto bg_model = cv::createBackgroundSubtractorMOG2();
-
-	while (true)
-	{
-		success = video.read(frame);
-		if (!success)
-		{
-			std::cout << "Can't read video frame!!";
-			break;
-		}
-
-		cv::Mat frame_gray = cvt_color(frame, cv::COLOR_BGR2GRAY);
-		cv::Mat mask = mog2(frame_gray, bg_model);
-		mask = dilate(mask, 3);
-
-		cv::Mat with_contours;
-		frame.copyTo(with_contours);
-
-		auto contours = find_contours(mask);
-
-		cv::drawContours(with_contours, contours, -1, cv::Scalar(0, 255, 0));
-		cv::imshow("with_contours", with_contours);
-
-		cv::Rect box;
-		for (auto& c : contours)
-		{
-			if (cv::contourArea(c) < 1000 || cv::contourArea(c) > 5000)
-				continue;
-			box = cv::boundingRect(c);
-			cv::rectangle(frame, box, cv::Scalar(0, 0, 255));
-		}
-
-		cv::imshow("frame", frame);
-		cv::imshow("mask", mask);
-
-		int key = cv::waitKey(1);
-		if (key == 'q')
-			break;
-	}
-	cv::destroyAllWindows();*/
-	
 	return 0;
 }
