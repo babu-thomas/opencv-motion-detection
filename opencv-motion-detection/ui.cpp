@@ -24,7 +24,8 @@ SDL_Window* ui_init()
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
 	SDL_DisplayMode current;
 	SDL_GetCurrentDisplayMode(0, &current);
-	SDL_Window *window = SDL_CreateWindow("Motion Detection", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1280, 720, SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
+	SDL_Window *window = SDL_CreateWindow("Motion Detection", SDL_WINDOWPOS_CENTERED,
+		SDL_WINDOWPOS_CENTERED, 1280, 720, SDL_WINDOW_OPENGL);
 	glcontext = SDL_GL_CreateContext(window);
 	gl3wInit();
 	// Setup ImGui binding
@@ -41,6 +42,31 @@ void render_window(SDL_Window* window)
 	glClear(GL_COLOR_BUFFER_BIT);
 	ImGui::Render();
 	SDL_GL_SwapWindow(window);
+}
+
+GLuint mat_to_tex(const cv::Mat& mat)
+{
+	GLuint tex_id;
+	glGenTextures(1, &tex_id);
+
+	glBindTexture(GL_TEXTURE_2D, tex_id);
+	// Set texture interpolation methods for minification and magnification
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+	// Set texture clamping method
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+	GLenum input_color_format = GL_BGR;
+	if (mat.channels() == 1)
+		input_color_format = GL_RED;
+
+	// Create the texture
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, mat.cols, mat.rows, 0, input_color_format,
+		GL_UNSIGNED_BYTE, mat.ptr());
+
+	return tex_id;
 }
 
 void ui_cleanup(SDL_Window *window)

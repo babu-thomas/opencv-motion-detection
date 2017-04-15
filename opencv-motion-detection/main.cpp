@@ -16,6 +16,10 @@
 int main(int argc, char *argv[])
 {
 	SDL_Window *window = ui_init();
+
+	cv::Mat frame = cv::imread("snoop_dogg.jpg");
+	GLuint snoop_tex = mat_to_tex(frame);
+
 	bool done = false;
 	while (!done)
 	{
@@ -29,13 +33,26 @@ int main(int argc, char *argv[])
 		}
 
 		ImGui_ImplSdlGL3_NewFrame(window);
-
-		ImGui::SetNextWindowSize(ImVec2(640, 720));
-		ImGui::Begin("Video Feed");
-		ImGui::Text("Hello");
+		ImGui::ShowTestWindow((bool*)true);
+		ImGui::SetNextWindowSize(ImVec2(1280, 720));
+		ImGui::Begin("Main Window", (bool*)true, ImGuiWindowFlags_AlwaysAutoResize
+			| ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoTitleBar
+			| ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoMove);
+		ImGui::SetWindowFontScale(1.5f);
+		static char buf1[128] = "";
+		ImGui::Text("Input Video Path: ");
+		ImGui::SameLine();
+		ImGui::InputText("", buf1, 128);
+		//ImGui::SetNextWindowSize(ImVec2(640, 720));
+		float video_feed_width = ImGui::GetWindowContentRegionWidth() * 0.5f;
+		float video_feed_height = ImGui::GetWindowHeight() - 50;
+		ImGui::BeginChild("Video Feed", ImVec2(video_feed_width, video_feed_height), false);
+		ImGui::Image((void*)snoop_tex, ImVec2(frame.size().width, frame.size().height));
+		ImGui::EndChild();
 		ImGui::End();
 		render_window(window);
 	}
+	glDeleteTextures(1, &snoop_tex);
 	ui_cleanup(window);
 
 	/*cv::VideoCapture video("http://127.0.0.1:8000/campus4-c0.avi");
