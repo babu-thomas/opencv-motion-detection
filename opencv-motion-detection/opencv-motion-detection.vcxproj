@@ -136,29 +136,29 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="filters.cpp" />
-    <ClCompile Include="imgui\gl3w.c" />
-    <ClCompile Include="imgui\imgui.cpp" />
-    <ClCompile Include="imgui\imgui_demo.cpp" />
-    <ClCompile Include="imgui\imgui_draw.cpp" />
-    <ClCompile Include="imgui\imgui_impl_sdl_gl3.cpp" />
-    <ClCompile Include="main.cpp" />
-    <ClCompile Include="ui.cpp" />
-    <ClCompile Include="utils.cpp" />
+    <ClCompile Include="src\filters.cpp" />
+    <ClCompile Include="src\imgui\gl3w.c" />
+    <ClCompile Include="src\imgui\imgui.cpp" />
+    <ClCompile Include="src\imgui\imgui_demo.cpp" />
+    <ClCompile Include="src\imgui\imgui_draw.cpp" />
+    <ClCompile Include="src\imgui\imgui_impl_sdl_gl3.cpp" />
+    <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\ui.cpp" />
+    <ClCompile Include="src\utils.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="filters.h" />
-    <ClInclude Include="imgui\gl3w.h" />
-    <ClInclude Include="imgui\glcorearb.h" />
-    <ClInclude Include="imgui\imconfig.h" />
-    <ClInclude Include="imgui\imgui.h" />
-    <ClInclude Include="imgui\imgui_impl_sdl_gl3.h" />
-    <ClInclude Include="imgui\imgui_internal.h" />
-    <ClInclude Include="imgui\stb_rect_pack.h" />
-    <ClInclude Include="imgui\stb_textedit.h" />
-    <ClInclude Include="imgui\stb_truetype.h" />
-    <ClInclude Include="ui.h" />
-    <ClInclude Include="utils.h" />
+    <ClInclude Include="src\filters.h" />
+    <ClInclude Include="src\imgui\gl3w.h" />
+    <ClInclude Include="src\imgui\glcorearb.h" />
+    <ClInclude Include="src\imgui\imconfig.h" />
+    <ClInclude Include="src\imgui\imgui.h" />
+    <ClInclude Include="src\imgui\imgui_impl_sdl_gl3.h" />
+    <ClInclude Include="src\imgui\imgui_internal.h" />
+    <ClInclude Include="src\imgui\stb_rect_pack.h" />
+    <ClInclude Include="src\imgui\stb_textedit.h" />
+    <ClInclude Include="src\imgui\stb_truetype.h" />
+    <ClInclude Include="src\ui.h" />
+    <ClInclude Include="src\utils.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
