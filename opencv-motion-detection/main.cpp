@@ -11,8 +11,6 @@
 #include "filters.h"
 #include "ui.h"
 
-#undef main
-
 int main(int argc, char *argv[])
 {
 	SDL_Window *window = ui_init();
