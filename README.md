@@ -1,4 +1,4 @@
-# Motion Detection using OpenCV
+# Motion Detection using OpenCV [![Build status](https://ci.appveyor.com/api/projects/status/dap93jyorejsvakw?svg=true)](https://ci.appveyor.com/project/babu-thomas/opencv-motion-detection)
 
 ![motion-detection-gif](https://media.giphy.com/media/TyiY5YR1SVT5S/giphy.gif)
 
