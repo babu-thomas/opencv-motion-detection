@@ -16,8 +16,8 @@ int main(int argc, char *argv[])
 	SDL_Window *window = ui::init();
 	cv::VideoCapture video;
 	bool success, first_run = true, draw_crop = false;
-	cv::Mat src_frame, motion_frame;
-	GLuint src_frame_tex, motion_frame_tex, crop_roi_tex;
+	cv::Mat src_frame;
+	GLuint src_frame_tex, crop_roi_tex;
 	cv::Point rect_pt1, rect_pt2;
 	cv::Rect selection;
 	cv::Mat crop_roi;
@@ -103,8 +103,6 @@ int main(int argc, char *argv[])
 					<< std::endl;
 			}
 
-			ImGui::ShowTestWindow();
-
 			if (video.isOpened())
 			{
 				success = video.read(src_frame);
@@ -119,21 +117,6 @@ int main(int argc, char *argv[])
 				{
 					glDeleteTextures(1, &src_frame_tex);
 					glDeleteTextures(1, &crop_roi_tex);
-				}
-
-				// Apply filters
-				cv::Mat src_frame_gray = cvt_color(src_frame, cv::COLOR_BGR2GRAY);
-				cv::Mat mask = mog2(src_frame_gray, bg_model);
-				mask = dilate(mask, 3);
-				auto contours = find_contours(mask);
-				src_frame.copyTo(motion_frame);
-				cv::Rect box;
-				for (auto& c : contours)
-				{
-					if (cv::contourArea(c) < 1000 || cv::contourArea(c) > 5000)
-						continue;
-					box = cv::boundingRect(c);
-					cv::rectangle(motion_frame, box, cv::Scalar(0, 0, 255));
 				}
 
 				float video_feed_width = ImGui::GetWindowContentRegionWidth() * 0.5f;
@@ -169,7 +152,21 @@ int main(int argc, char *argv[])
 				if (draw_crop)
 				{
 					cv::Mat crop_roi_rsz = resize(crop_roi, video_feed_width, 0, cv::INTER_CUBIC);
-					crop_roi_rsz = resize(crop_roi_rsz, video_feed_width, 0, cv::INTER_CUBIC);
+					cv::Mat gray = cvt_color(crop_roi_rsz, cv::COLOR_BGR2GRAY);
+
+					// Motion Detection
+					cv::Mat mask = mog2(gray, bg_model);
+					mask = dilate(mask, 3);
+					auto contours = find_contours(mask);
+					cv::Rect box;
+					for (auto& c : contours)
+					{
+						if (cv::contourArea(c) < 1000)
+							continue;
+						box = cv::boundingRect(c);
+						cv::rectangle(crop_roi_rsz, box, cv::Scalar(0, 0, 255), 4);
+					}
+
 					crop_roi_tex = ui::mat_to_tex(crop_roi_rsz);
 					ImGui::Image((void*)crop_roi_tex, ImVec2(crop_roi.size().width,
 						crop_roi.size().height));
