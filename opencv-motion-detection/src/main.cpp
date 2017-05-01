@@ -15,10 +15,11 @@ int main(int argc, char *argv[])
 {
 	SDL_Window *window = ui::init();
 	cv::VideoCapture video;
-	bool success, first_run = true;
+	bool success, first_run = true, draw_crop = false;
 	cv::Mat src_frame, motion_frame;
-	GLuint src_frame_tex, motion_frame_tex;
+	GLuint src_frame_tex, motion_frame_tex, crop_roi_tex;
 	cv::Point rect_pt1, rect_pt2;
+	cv::Mat crop_roi;
 	bool dragging = false;
 
 	auto bg_model = cv::createBackgroundSubtractorMOG2();
@@ -101,6 +102,8 @@ int main(int argc, char *argv[])
 					<< std::endl;
 			}
 
+			ImGui::ShowTestWindow();
+
 			if (video.isOpened())
 			{
 				success = video.read(src_frame);
@@ -114,6 +117,7 @@ int main(int argc, char *argv[])
 				if (!first_run)
 				{
 					glDeleteTextures(1, &src_frame_tex);
+					glDeleteTextures(1, &crop_roi_tex);
 				}
 
 				// Apply filters
@@ -142,15 +146,33 @@ int main(int argc, char *argv[])
 				// Draw selection
 				if (dragging)
 				{
-					cv::rectangle(src_frame, cv::Rect(rect_pt1 - win_pos, rect_pt2 - win_pos),
-						cv::Scalar(0, 255, 0));
+					cv::Rect selection(rect_pt1 - win_pos, rect_pt2 - win_pos);
+					cv::rectangle(src_frame, selection, cv::Scalar(0, 255, 0));
+					crop_roi = src_frame(selection);
+					if (crop_roi.size().width > 20 && crop_roi.size().height > 20)
+						draw_crop = true;
 				}
 				
 				// Video Feed Window
-				ImGui::BeginChild("Video Feed", ImVec2(video_feed_height, video_feed_height));
+				ImGui::BeginChild("Video Feed", ImVec2(video_feed_width, video_feed_height));
 				src_frame_tex = ui::mat_to_tex(src_frame);
 				ImGui::Image((void*)src_frame_tex, ImVec2(src_frame.size().width,
 					src_frame.size().height));
+				ImGui::EndChild();
+
+				// Cropped Feed Window
+				ImGui::SameLine();
+				ImGui::BeginChild("Cropped Feed", ImVec2(video_feed_width, video_feed_height));
+				ImGui::SetWindowFontScale(1.5f);
+				ImGui::Text("Motion in Selected Region");
+				if (draw_crop)
+				{
+					cv::Mat crop_roi_rsz = resize(crop_roi, video_feed_width, 0, cv::INTER_CUBIC);
+					crop_roi_tex = ui::mat_to_tex(crop_roi_rsz);
+					ImGui::Image((void*)crop_roi_tex, ImVec2(crop_roi.size().width,
+						crop_roi.size().height));
+					draw_crop = false;
+				}
 				ImGui::EndChild();
 
 				first_run = false;
