@@ -19,6 +19,7 @@ int main(int argc, char *argv[])
 	cv::Mat src_frame, motion_frame;
 	GLuint src_frame_tex, motion_frame_tex, crop_roi_tex;
 	cv::Point rect_pt1, rect_pt2;
+	cv::Rect selection;
 	cv::Mat crop_roi;
 	bool dragging = false;
 
@@ -146,13 +147,13 @@ int main(int argc, char *argv[])
 				// Draw selection
 				if (dragging)
 				{
-					cv::Rect selection(rect_pt1 - win_pos, rect_pt2 - win_pos);
-					cv::rectangle(src_frame, selection, cv::Scalar(0, 255, 0));
-					crop_roi = src_frame(selection);
-					if (crop_roi.size().width > 20 && crop_roi.size().height > 20)
-						draw_crop = true;
+					selection = { rect_pt1 - win_pos, rect_pt2 - win_pos };
 				}
-				
+				cv::rectangle(src_frame, selection, cv::Scalar(0, 255, 0), 2);
+				crop_roi = src_frame(selection);
+				if (crop_roi.size().width > 20 && crop_roi.size().height > 20)
+					draw_crop = true;
+
 				// Video Feed Window
 				ImGui::BeginChild("Video Feed", ImVec2(video_feed_width, video_feed_height));
 				src_frame_tex = ui::mat_to_tex(src_frame);
@@ -168,6 +169,7 @@ int main(int argc, char *argv[])
 				if (draw_crop)
 				{
 					cv::Mat crop_roi_rsz = resize(crop_roi, video_feed_width, 0, cv::INTER_CUBIC);
+					crop_roi_rsz = resize(crop_roi_rsz, video_feed_width, 0, cv::INTER_CUBIC);
 					crop_roi_tex = ui::mat_to_tex(crop_roi_rsz);
 					ImGui::Image((void*)crop_roi_tex, ImVec2(crop_roi.size().width,
 						crop_roi.size().height));
